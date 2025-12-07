@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 # ============================================================
 # KONFIGURATION
 # ============================================================
-INPUT_FOLDER = "reports"             # Ordner mit Kraken2-Reports
-REPORTS_TO_USE = ["ERR12510713_report.txt", "ERR12510714_report.txt"] # [] = alle Reports im Ordner
+INPUT_FOLDER = "kraken2_run"         # Ordner mit Kraken2-Reports
+REPORTS_TO_USE = ["ERR12510713_report.txt", "ERR12510871_report.txt"] # [] = alle Reports im Ordner
 TAXON_LEVEL = "F"                    # "F"=Familie, "G"=Genus, "S"=Species ...
 MIN_REL_ABUNDANCE = 0.03             # Taxa <x% werden zu "Other" zusammengefasst
 # ============================================================

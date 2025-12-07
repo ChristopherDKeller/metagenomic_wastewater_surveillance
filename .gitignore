@@ -1,1 +1,3 @@
 .venv
+kraken2_run/
+__pycache__/
