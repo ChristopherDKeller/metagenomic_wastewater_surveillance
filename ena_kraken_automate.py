@@ -3,6 +3,7 @@ import subprocess
 import requests
 import sys
 import shutil
+import time
 
 KRAKEN2_IMAGE = "staphb/kraken2:2.1.6-viral-20250402"
 OUTPUT_DIR = "kraken2_run"
@@ -35,8 +36,7 @@ def ena_fastq_links(run_accession):
 
     return fastq_https
 
-
-def download_fastqs(urls, output_dir):
+def download_fastqs(urls, output_dir, max_retries=1000, chunk_size=1024*1024):
     os.makedirs(output_dir, exist_ok=True)
     local_paths = []
 
@@ -50,13 +50,38 @@ def download_fastqs(urls, output_dir):
             continue
 
         print(f"→ Lade herunter: {filename}")
-        with requests.get(url, stream=True) as r:
-            r.raise_for_status()
-            with open(local_path, "wb") as f:
-                shutil.copyfileobj(r.raw, f)
+
+        for attempt in range(1, max_retries+1):
+            try:
+                headers = {}
+                # Resume if file partially exists
+                if os.path.exists(local_path):
+                    downloaded = os.path.getsize(local_path)
+                    headers["Range"] = f"bytes={downloaded}-"
+                else:
+                    downloaded = 0
+
+                with requests.get(url, headers=headers, stream=True, timeout=60) as r:
+                    r.raise_for_status()
+
+                    mode = "ab" if downloaded > 0 else "wb"
+
+                    with open(local_path, mode) as f:
+                        for chunk in r.iter_content(chunk_size=chunk_size):
+                            if chunk:
+                                f.write(chunk)
+
+                print(f"✔ Download abgeschlossen: {filename}")
+                break
+
+            except Exception as e:
+                print(f"⚠ Download-Fehler (Versuch {attempt}/{max_retries}): {e}")
+                time.sleep(3)
+
+                if attempt == max_retries:
+                    raise RuntimeError(f"❌ Abbruch nach {max_retries} Fehlversuchen bei {filename}")
 
     return local_paths
-
 
 def run_kraken2(docker_image, run_accession, fastq_files, output_dir, threads):
     docker_mount = os.path.abspath(output_dir)
