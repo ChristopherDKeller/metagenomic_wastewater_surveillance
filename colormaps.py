@@ -1,10 +1,9 @@
 ORDER_COLOR_MAP = {
-    "Crassvirales":    "#0072B2",  # blau (dominant, gut sichtbar)
+    "Crassvirales":    "#0072B2",  # blau 
     "Timlovirales":    "#E69F00",  # orange
     "Chitovirales":    "#009E73",  # grün
     "Imitervirales":   "#D55E00",  # rot-orange
     "Herpesvirales":   "#CC79A7",  # violett
-    "Tubavirales":     "#56B4E9",  # hellblau
     "Lefavirales":     "#F0E442",  # gelb
     "Bunyavirales":    "#999999",  # grau
     "Pimascovirales":  "#7F7F7F",  # dunkleres grau
