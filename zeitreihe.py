@@ -1,4 +1,6 @@
 import os
+from matplotlib.patches import Patch
+import matplotlib.dates as mdates
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -136,23 +138,63 @@ def plot_all_plants(df):
     n = len(plants)
 
     fig, axes = plt.subplots(n, 1, figsize=(12, 3*n), sharex=True)
-
+    plt.subplots_adjust(hspace=0.4)
     if n == 1:
         axes = [axes]
 
+    all_taxa = set()
+
     for ax, plant in zip(axes, plants):
         pivot_plot = prepare_time_series(df, plant)
-        if pivot_plot is None:
+        if pivot_plot is None or pivot_plot.empty:
             continue
 
-        colors = [ORDER_COLOR_MAP.get(taxon, "#BBBBBB") for taxon in pivot_plot.columns]
-        pivot_plot.plot.area(ax=ax, color=colors, legend=False)
-        ax.set_title(plant)
-        ax.set_ylabel("Rel. Abundance")
+        all_taxa.update(pivot_plot.columns)
 
+        colors = [ORDER_COLOR_MAP.get(t, "#BBBBBB") for t in pivot_plot.columns]
+
+        pivot_plot.plot.area(
+            ax=ax,
+            color=colors,
+            legend=False
+        )
+
+        ax.set_title(plant)
+        ax.xaxis.set_major_locator(mdates.MonthLocator(bymonth=[3,6,9,12], interval=1))
+        ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m"))
+
+        ax.xaxis.set_minor_locator(mdates.MonthLocator())
+
+
+    axes[int(n/2)].set_ylabel("Relative Abundance")
     axes[-1].set_xlabel("Date")
-    plt.tight_layout()
+
+    ordered_taxa = [
+        "Crassvirales", "Timlovirales", "Chitovirales", "Imitervirales",
+        "Herpesvirales", "Tubulavirales", "Lefavirales", "Bunyavirales",
+        "Pimascovirales", "Algavirales", "Halopanivirales",
+        "Mononegavirales", "Rowavirales", "Picornavirales",
+        "Other"
+    ]
+
+    legend_taxa = [t for t in ordered_taxa if t in all_taxa]
+    
+    add_global_legend(axes[-1], legend_taxa)
     plt.show()
+
+
+def add_global_legend(ax, taxa):
+    handles = [
+        Patch(facecolor=ORDER_COLOR_MAP.get(t, "#BBBBBB"), label=t)
+        for t in taxa
+    ]
+
+    ax.legend(
+        handles=handles,
+        title="Viral order",
+        loc="lower left",
+        bbox_to_anchor=(1.01, 3)
+    )
 
 def plot_single_plant(pivot_plot, plant):
     colors = [ORDER_COLOR_MAP.get(taxon, "#BBBBBB") for taxon in pivot_plot.columns]
@@ -172,5 +214,5 @@ if __name__ == "__main__":
     plot_all_plants(df)
 
     #for plant in df["PLANT"].unique():
-        pivot_plot = prepare_time_series(df, plant)
-        plot_single_plant(pivot_plot, plant)
+    #    pivot_plot = prepare_time_series(df, plant)
+    #    plot_single_plant(pivot_plot, plant)
