@@ -87,7 +87,7 @@ def load_reports(input_folder, reports_to_use, taxon_level, sample_mapping, repo
         dfs.append(df_rel)
     return pd.concat(dfs, ignore_index=True)
 
-def plot_time_series(df, plant, min_rel_abundance=MIN_REL_ABUNDANCE, top_n=None):
+def prepare_time_series(df, plant, min_rel_abundance=MIN_REL_ABUNDANCE, top_n=None):
     """Stacked area plot der Virusfamilien über Zeit für eine Kläranlage"""
     plant_df = df[df["PLANT"] == plant].copy()
     if plant_df.empty:
@@ -115,7 +115,8 @@ def plot_time_series(df, plant, min_rel_abundance=MIN_REL_ABUNDANCE, top_n=None)
 
     pivot_plot = pivot_plot.div(pivot_plot.sum(axis=1), axis=0)
 
-    pivot_plot = pivot_plot.sort_index()
+    #Replikate mitteln
+    pivot_plot = pivot_plot.groupby(["DATE"]).mean()
 
     #sortieren nach Gesamtanteil
     cols_no_other = [c for c in pivot_plot.columns if c != "Other"]
@@ -127,15 +128,40 @@ def plot_time_series(df, plant, min_rel_abundance=MIN_REL_ABUNDANCE, top_n=None)
         .tolist()
     )
     sorted_cols.append("Other")
-    pivot_plot = pivot_plot[sorted_cols]
 
-    colors = [ORDER_COLOR_MAP.get(taxon, "#CCCCCC") for taxon in pivot_plot.columns]
+    return pivot_plot[sorted_cols]
+
+def plot_all_plants(df):
+    plants = sorted(df["PLANT"].unique())
+    n = len(plants)
+
+    fig, axes = plt.subplots(n, 1, figsize=(12, 3*n), sharex=True)
+
+    if n == 1:
+        axes = [axes]
+
+    for ax, plant in zip(axes, plants):
+        pivot_plot = prepare_time_series(df, plant)
+        if pivot_plot is None:
+            continue
+
+        colors = [ORDER_COLOR_MAP.get(taxon, "#BBBBBB") for taxon in pivot_plot.columns]
+        pivot_plot.plot.area(ax=ax, color=colors, legend=False)
+        ax.set_title(plant)
+        ax.set_ylabel("Rel. Abundance")
+
+    axes[-1].set_xlabel("Date")
+    plt.tight_layout()
+    plt.show()
+
+def plot_single_plant(pivot_plot, plant):
+    colors = [ORDER_COLOR_MAP.get(taxon, "#BBBBBB") for taxon in pivot_plot.columns]
 
     pivot_plot.plot.area(color=colors)
     plt.title(f"Relative Virus-Häufigkeiten über Zeit ({plant})")
     plt.ylabel("Relative Häufigkeit")
     plt.xlabel("Datum")
-    plt.legend(title="Taxon", bbox_to_anchor=(1.05,1), loc="upper left")
+    plt.legend(title="Order", bbox_to_anchor=(1.05,1), loc="upper left")
     plt.tight_layout()
     plt.show()
 
@@ -143,5 +169,8 @@ if __name__ == "__main__":
     sample_mapping = load_sample_metadata(META_CSV)
     df = load_reports(INPUT_FOLDER, REPORTS_TO_USE, TAXON_LEVEL, sample_mapping, reports_to_skip=["ERR2356165_report.txt"])
 
-    for plant in df["PLANT"].unique():
-        plot_time_series(df, plant, MIN_REL_ABUNDANCE,None)
+    plot_all_plants(df)
+
+    #for plant in df["PLANT"].unique():
+        pivot_plot = prepare_time_series(df, plant)
+        plot_single_plant(pivot_plot, plant)
