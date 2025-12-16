@@ -1,12 +1,15 @@
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
+
+from colormaps import FAMILY_COLOR_MAP
 
 # ============================================================
 # KONFIGURATION
 # ============================================================
 INPUT_FOLDER = "kraken2_run"
-REPORTS_TO_USE = ["ERR12510713_report.txt"] # [] = alle Reports im Ordner
+REPORTS_TO_USE = ["ERR12510710_report.txt", "ERR12510711_report.txt", "ERR12510713_report.txt", "ERR12510714_report.txt"] # [] = alle Reports im Ordner
 TAXON_LEVEL = "F"
 MIN_REL_ABUNDANCE = 0.03             # Taxa <x% werden zu "Other" zusammengefasst
 META_CSV = "samples.csv"
@@ -110,12 +113,25 @@ def plot_stacked(df):
     # Jede Zeile sauber auf 1 normieren
     pivot_plot = pivot_plot.div(pivot_plot.sum(axis=1), axis=0)
 
+    sorted_cols = (
+        pivot_plot
+        .drop(columns=["Other"])
+        .sum(axis=0)
+        .sort_values(ascending=False)
+        .index
+        .tolist()
+    )
+    sorted_cols.append("Other")
+
+    pivot_plot = pivot_plot[sorted_cols]
+
     pivot_plot.plot(
+        color=FAMILY_COLOR_MAP,
         kind="bar",
         stacked=True,
     )
 
-    plt.ylabel("Relative Abundance (within all viruses)")
+    plt.ylabel("Relative Abundance")
     plt.title(f"Viral composition at taxonomic level '{TAXON_LEVEL}'")
     plt.legend(title="Taxon", bbox_to_anchor=(1.05, 1), loc="upper left")
     plt.tight_layout()
@@ -124,7 +140,7 @@ def plot_stacked(df):
 def load_sample_metadata(csv_path):
     """
     Lädt die Metadaten-CSV und baut ein Mapping:
-    RUN_ACCESSION → 'CITY DATE'
+    RUN_ACCESSION → 'CITY DATE (R1)'
     """
     df = pd.read_csv(csv_path, sep=";")
 
@@ -133,7 +149,8 @@ def load_sample_metadata(csv_path):
         run = str(row["ENA_RUN_ACCESSION"]).strip()
         city = str(row["CITY"]).strip()
         date = str(row["COLLECTION_DATE"]).strip()
-        label = f"{city} {date}"
+        replica = row["REPLICA"]
+        label = f"{city} {date} (R{replica})"
         mapping[run] = label
 
     return mapping
