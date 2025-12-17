@@ -1,9 +1,8 @@
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 
-from colormaps import FAMILY_COLOR_MAP
+from util import FAMILY_COLOR_MAP
 
 # ============================================================
 # KONFIGURATION
