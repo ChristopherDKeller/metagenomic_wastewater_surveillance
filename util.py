@@ -1,3 +1,13 @@
+PLANT_NAME_MAP = {
+    "ATO2 Wastewater Treatment Plant": "Rome",
+    "Budapesti Kozponti Szennyviztisztito Telep": "Budapest",
+    "Dokhaven": "Rotterdam",
+    "Gruppo HERA": "Bologna",
+    "Rensningsanlaeg Avedoere": "Copenhagen_RA",
+    "Rensningsanlaeg Damhusaaen": "Copenhagen_RD",
+    "Rensningsanlaeg Lynetten": "Copenhagen_RL",
+}
+
 ORDER_COLOR_MAP = {
     "Crassvirales":    "#0072B2",
     "Timlovirales":    "#E69F00",

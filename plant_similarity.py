@@ -4,6 +4,8 @@ import numpy as np
 import pandas as pd
 from scipy.spatial.distance import braycurtis
 
+from util import PLANT_NAME_MAP
+
 # ============================================================
 # KONFIGURATION
 # ============================================================
@@ -96,8 +98,8 @@ def plot_similarity_heatmap(similarity_df):
     ax.set_xticks(np.arange(len(similarity_df.columns)))
     ax.set_yticks(np.arange(len(similarity_df.index)))
 
-    ax.set_xticklabels(similarity_df.columns, rotation=45, ha="right")
-    ax.set_yticklabels(similarity_df.index)
+    ax.set_xticklabels((PLANT_NAME_MAP.get(col, col) for col in similarity_df.columns), rotation=45, ha="right")
+    ax.set_yticklabels((PLANT_NAME_MAP.get(row, row) for row in similarity_df.index))
 
     # Farbskala
     cbar = plt.colorbar(im, ax=ax)

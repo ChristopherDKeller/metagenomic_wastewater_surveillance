@@ -4,7 +4,7 @@ import matplotlib.dates as mdates
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from colormaps import FAMILY_COLOR_MAP, ORDER_COLOR_MAP
+from util import FAMILY_COLOR_MAP, ORDER_COLOR_MAP, PLANT_NAME_MAP
 
 # ============================================================
 # KONFIGURATION
@@ -164,7 +164,7 @@ def plot_all_plants(df):
             legend=False
         )
 
-        ax.set_title(plant)
+        ax.set_title(PLANT_NAME_MAP.get(plant, plant))
         ax.xaxis.set_major_locator(mdates.MonthLocator(bymonth=[3,6,9,12], interval=1))
         ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m"))
 
