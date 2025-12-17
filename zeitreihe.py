@@ -4,7 +4,7 @@ import matplotlib.dates as mdates
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from colormaps import ORDER_COLOR_MAP
+from colormaps import FAMILY_COLOR_MAP, ORDER_COLOR_MAP
 
 # ============================================================
 # KONFIGURATION
@@ -12,7 +12,7 @@ from colormaps import ORDER_COLOR_MAP
 INPUT_FOLDER = "kraken2_run"
 REPORTS_TO_USE = []
 TAXON_LEVEL = "O"
-MIN_REL_ABUNDANCE = 0.05
+MIN_REL_ABUNDANCE = 0.05 #0.05 bei O, 0.3 bei F
 META_CSV = "samples.csv"
 # ============================================================
 
@@ -151,11 +151,16 @@ def plot_all_plants(df):
 
         all_taxa.update(pivot_plot.columns)
 
-        colors = [ORDER_COLOR_MAP.get(t, "#BBBBBB") for t in pivot_plot.columns]
+        if TAXON_LEVEL == "O":
+            colors = [ORDER_COLOR_MAP.get(t, "#BBBBBB") for t in pivot_plot.columns]
+        elif TAXON_LEVEL == "F":
+            colors = [FAMILY_COLOR_MAP.get(t, "#BBBBBB") for t in pivot_plot.columns]
+        else:
+            colors = None
 
         pivot_plot.plot.area(
             ax=ax,
-            color=colors,
+            color= colors if colors else None,
             legend=False
         )
 
@@ -169,7 +174,7 @@ def plot_all_plants(df):
     axes[int(n/2)].set_ylabel("Relative Abundance")
     axes[-1].set_xlabel("Date")
 
-    ordered_taxa = [
+    ordered_taxa_O = [
         "Crassvirales", "Timlovirales", "Chitovirales", "Imitervirales",
         "Herpesvirales", "Tubulavirales", "Lefavirales", "Bunyavirales",
         "Pimascovirales", "Algavirales", "Halopanivirales",
@@ -177,7 +182,27 @@ def plot_all_plants(df):
         "Other"
     ]
 
-    legend_taxa = [t for t in ordered_taxa if t in all_taxa]
+    ordered_taxa_F = [
+        "Intestiviridae",
+        "Suoliviridae",
+        "Peduoviridae",
+        "Crevaviridae",
+        "Herelleviridae",
+        "Kyanoviridae",
+        "Straboviridae",
+        "Schitoviridae",
+        "Steitzviridae",
+        "Steigviridae",
+        "Autographiviridae",
+        "Demerecviridae",
+        "Mimiviridae",
+        "Poxviridae",
+        "Arenbergviridae",
+        "Other",
+    ]
+
+
+    legend_taxa = [t for t in (ordered_taxa_O if TAXON_LEVEL == "O" else ordered_taxa_F) if t in all_taxa]
     
     add_global_legend(axes[-1], legend_taxa)
     plt.show()
@@ -185,7 +210,7 @@ def plot_all_plants(df):
 
 def add_global_legend(ax, taxa):
     handles = [
-        Patch(facecolor=ORDER_COLOR_MAP.get(t, "#BBBBBB"), label=t)
+        Patch(facecolor=(ORDER_COLOR_MAP if TAXON_LEVEL == "O" else FAMILY_COLOR_MAP).get(t, "#BBBBBB"), label=t)
         for t in taxa
     ]
 
@@ -197,9 +222,14 @@ def add_global_legend(ax, taxa):
     )
 
 def plot_single_plant(pivot_plot, plant):
-    colors = [ORDER_COLOR_MAP.get(taxon, "#BBBBBB") for taxon in pivot_plot.columns]
+    if TAXON_LEVEL == "O":
+        colors = [ORDER_COLOR_MAP.get(taxon, "#BBBBBB") for taxon in pivot_plot.columns]
+    elif TAXON_LEVEL == "F":
+        colors = [FAMILY_COLOR_MAP.get(taxon, "#BBBBBB") for taxon in pivot_plot.columns]
+    else:
+        colors = None
 
-    pivot_plot.plot.area(color=colors)
+    pivot_plot.plot.area(color=colors if colors else None)
     plt.title(f"Relative Virus-Häufigkeiten über Zeit ({plant})")
     plt.ylabel("Relative Häufigkeit")
     plt.xlabel("Datum")
@@ -209,7 +239,7 @@ def plot_single_plant(pivot_plot, plant):
 
 if __name__ == "__main__":
     sample_mapping = load_sample_metadata(META_CSV)
-    df = load_reports(INPUT_FOLDER, REPORTS_TO_USE, TAXON_LEVEL, sample_mapping, reports_to_skip=["ERR2356165_report.txt"])
+    df = load_reports(INPUT_FOLDER, REPORTS_TO_USE, TAXON_LEVEL, sample_mapping, reports_to_skip=["ERR2356165_report.txt", "ERR12510732_report.txt"])
 
     plot_all_plants(df)
 

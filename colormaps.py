@@ -29,4 +29,9 @@ FAMILY_COLOR_MAP = {
     "Straboviridae":   "#6a3d9a",
     "Suoliviridae":    "#ffff99",
     "Other":           "#D9D9D9",
+
+    "Demerecviridae":  "#8dd3c7",
+    "Autographiviridae":"#ffffb3",
+    "Poxviridae":      "#bebada",
+    "Arenbergviridae": "#fb8072",
 }
