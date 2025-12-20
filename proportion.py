@@ -1,9 +1,9 @@
 import os
+import numpy as np
 import pandas as pd
 
 INPUT_FOLDER = "kraken2_run"
 
-# all possible phage taxa at various levels
 TAXA = {
     "Caudoviricetes",
     "Vidaverviricetes",
@@ -29,11 +29,10 @@ def parse_kraken2_report(path):
     df["name"] = df["name"].str.strip()
     return df
 
-phage_reads_total = 0
-virus_reads_total = 0
+fractions = []
 
 for report_file in os.listdir(INPUT_FOLDER):
-    if not report_file.endswith("_report.txt"):
+    if not report_file.endswith("_report.txt") or report_file in ["ERR2356165_report.txt", "ERR12510732_report.txt"]:
         continue
     path = os.path.join(INPUT_FOLDER, report_file)
     df = parse_kraken2_report(path)
@@ -42,13 +41,9 @@ for report_file in os.listdir(INPUT_FOLDER):
     if viruses_row.empty:
         continue
     virus_reads = viruses_row["reads_clade"].iloc[0]
-    virus_reads_total += virus_reads
 
     taxa_df = df[df["name"].isin(TAXA)]
-    reads_total += taxa_df["reads_clade"].sum()
+    reads = taxa_df["reads_clade"].sum()
+    fractions.append(reads / virus_reads)
 
-if virus_reads_total > 0:
-    fraction = reads_total / virus_reads_total
-    print(f"Anteil über alle Proben relativ zu allen Virus-Reads: {fraction:.2%}")
-else:
-    print("Keine viralen Reads gefunden.")
+print(f"Mittelwert über Proben: {np.mean(fractions):.2%}")
