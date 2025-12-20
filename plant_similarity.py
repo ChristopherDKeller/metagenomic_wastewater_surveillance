@@ -11,7 +11,7 @@ from util import PLANT_NAME_MAP
 # ============================================================
 REPORT_DIR = "kraken2_run"
 META_CSV = "samples.csv"
-TAXON_LEVEL = "S"
+TAXON_LEVEL = None
 # ============================================================
 
 
@@ -32,10 +32,13 @@ def parse_kraken2_report(path, taxon_level):
 
     virus_reads = virus_row["reads_clade"].iloc[0]
 
-    df_level = df[df["rank_code"] == taxon_level].copy()
-    df_level["rel"] = df_level["reads_clade"] / virus_reads
+    if taxon_level is not None:
+        df = df[df["rank_code"] == taxon_level].copy()
 
-    return df_level.set_index("name")["rel"]
+    df_direct = df[df["reads_direct"] > 0].copy()
+    df_direct["rel"] = df_direct["reads_clade"] / virus_reads
+
+    return df_direct.set_index("name")["rel"]
 
 
 def load_metadata(csv_path):
@@ -105,7 +108,7 @@ def plot_similarity_heatmap(similarity_df):
     cbar = plt.colorbar(im, ax=ax)
     cbar.set_label("Bray-Curtis Similarity", rotation=90)
 
-    ax.set_title("Virale Ähnlichkeit zwischen Klärwerken\n(Species-Level)")
+    ax.set_title("Virale Ähnlichkeit zwischen Klärwerken")
 
     plt.tight_layout()
     plt.show()
@@ -119,5 +122,6 @@ if __name__ == "__main__":
     similarity = compute_similarity_matrix(plant_profiles)
 
     print("\nBray-Curtis Similarity zwischen Klärwerken:\n")
-    print(similarity.round(3))
+    with pd.option_context('display.max_rows', None, 'display.max_columns', None):
+        print(similarity.round(3))
     plot_similarity_heatmap(similarity)
