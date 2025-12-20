@@ -12,7 +12,7 @@ from util import FAMILY_COLOR_MAP, GENUS_COLOR_MAP, ORDER_COLOR_MAP, PLANT_NAME_
 INPUT_FOLDER = "kraken2_run"
 REPORTS_TO_USE = []
 TAXON_LEVEL = "G"
-MIN_REL_ABUNDANCE = 0.04
+MIN_REL_ABUNDANCE = 0.06
 META_CSV = "samples.csv"
 # ============================================================
 
@@ -184,7 +184,7 @@ def plot_all_plants(df):
 
     ordered_taxa_F = ["Intestiviridae","Suoliviridae","Peduoviridae","Crevaviridae","Herelleviridae","Kyanoviridae","Straboviridae","Schitoviridae","Steitzviridae","Steigviridae","Autographiviridae","Demerecviridae","Mimiviridae","Poxviridae","Arenbergviridae","Other"]
 
-    ordered_taxa_G = [ "Carjivirus", "Burzaovirus", "Punavirus", "Kingevirus", "Skunavirus", "Afonbuvirus", "Junduvirus", "Aurodevirus", "Blohavirus", "Toutatisvirus", "Endlipuvirus", "Shenzhenivirus", "Kinglevirus", "Birpovirus", "Fohxhuevirus", "Cohcovirus", "Gihfavirus", "Dabirmavirus", "Polybotosvirus", "Kahnovirus", "Menderavirus", "Erskinevirus", "Taranisvirus", "Pandoravirus", "Hpunavirus", "Canhaevirus", "Oryzopoxvirus", "Mushuvirus", "Casadabanvirus", "Jahgtovirus" ,  "Brigitvirus", "Other", "Unassigned" ]
+    ordered_taxa_G = [ "Carjivirus", "Burzaovirus", "Punavirus", "Agtrevirus", "Betabaculovirus", "Gihfavirus", "Casadabanvirus", "Purivirus", "Baikalvirus", "Pamexvirus", "Immutovirus", "Other", "Unassigned" ]
 
     if TAXON_LEVEL == "O":
         order = ordered_taxa_O
