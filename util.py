@@ -9,6 +9,7 @@ PLANT_NAME_MAP = {
 }
 
 ORDER_COLOR_MAP = {
+    "Unassigned":     "#000000",
     "Crassvirales":    "#0072B2",
     "Timlovirales":    "#E69F00",
     "Chitovirales":    "#009E73",
@@ -44,4 +45,42 @@ FAMILY_COLOR_MAP = {
     "Autographiviridae":"#ffffb3",
     "Poxviridae":      "#bebada",
     "Arenbergviridae": "#fb8072",
+}
+
+GENUS_COLOR_MAP = {
+    "Unassigned":      "#AAAAAA",
+    "Other":           "#DDDDDD",
+
+    "Carjivirus":      "#a6cee3",
+    "Burzaovirus":     "#1f78b4",
+    "Punavirus":       "#b2df8a",
+    "Kingevirus":      "#33a02c",
+    "Shenzhenivirus":  "#fb9a99",
+    "Kinglevirus":     "#e31a1c",
+    "Gihfavirus":      "#fdbf6f",
+    "Polybotosvirus":  "#ff7f00",
+    "Menderavirus":    "#cab2d6",
+    "Erskinevirus":    "#6a3d9a",
+    "Casadabanvirus":  "#ffff99",
+    
+    "Skunavirus":      "#add8e6",
+    "Afonbuvirus":     "#1f77b4",
+    "Junduvirus":      "#E69F00",
+    "Aurodevirus":     "#F0E442",
+    "Blohavirus":      "#D55E00",
+    "Toutatisvirus":   "#ff7f0e",
+    "Endlipuvirus":    "#ffcc00",
+    "Birpovirus":      "#9467bd",
+    "Fohxhuevirus":    "#e377c2",
+    "Cohcovirus":      "#7570B3",
+    "Dabirmavirus":    "#bcbd22",
+    "Kahnovirus":      "#2ca02c",
+    "Taranisvirus":    "#b2df8a",
+    "Pandoravirus":    "#33a02c",
+    "Hpunavirus":      "#A6761D",
+    "Canhaevirus":     "#8c564b",
+    "Oryzopoxvirus":   "#7f7f7f",
+    "Mushuvirus":      "#c49c94",
+    "Jahgtovirus":     "#fb9a99",
+    "Brigitvirus":     "#fdbf6f"
 }

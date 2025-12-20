@@ -4,19 +4,19 @@ import matplotlib.dates as mdates
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from util import FAMILY_COLOR_MAP, ORDER_COLOR_MAP, PLANT_NAME_MAP
+from util import FAMILY_COLOR_MAP, GENUS_COLOR_MAP, ORDER_COLOR_MAP, PLANT_NAME_MAP
 
 # ============================================================
 # KONFIGURATION
 # ============================================================
 INPUT_FOLDER = "kraken2_run"
 REPORTS_TO_USE = []
-TAXON_LEVEL = "O"
-MIN_REL_ABUNDANCE = 0.05 #0.05 bei O, 0.3 bei F
+TAXON_LEVEL = "G"
+MIN_REL_ABUNDANCE = 0.04
 META_CSV = "samples.csv"
 # ============================================================
 
-def parse_kraken2_report(path, taxon_level, sample_mapping):
+def parse_kraken2_report(path, taxon_level):
     df = pd.read_csv(
         path, sep="\t", header=None,
         names=["percent", "reads_clade", "reads_direct", "rank_code", "ncbi_taxid", "name"],
@@ -34,20 +34,23 @@ def parse_kraken2_report(path, taxon_level, sample_mapping):
     # Filter Taxonomie-Level
     df_level = df[df["rank_code"] == taxon_level].copy()
 
-    # relative Häufigkeiten
+    reads_at_level = df_level["reads_clade"].sum()
+    unassigned_reads = virus_reads_total - reads_at_level
+    
+    # Erstelle eine Zeile für die nicht zugeordneten Viren
+    unassigned_row = pd.DataFrame({ 
+        "name": ["Unassigned"], 
+        "rel": [unassigned_reads / virus_reads_total]
+    })
+
     df_level["rel"] = df_level["reads_clade"] / virus_reads_total
+    df_level = pd.concat([df_level[["name", "rel"]], unassigned_row], ignore_index=True)
 
     # Sample Label bestimmen
     basename = os.path.basename(path)
     run_id = basename.replace("_report.txt", "")
-    if run_id in sample_mapping:
-        sample_label = sample_mapping[run_id]
-    else:
-        sample_label = run_id
-
-    df_level["sample"] = sample_label
     df_level["run"] = run_id
-    return df_level[["sample", "run", "name", "rel"]]
+    return df_level[["run", "name", "rel"]]
 
 def load_sample_metadata(csv_path):
     """
@@ -81,7 +84,7 @@ def load_reports(input_folder, reports_to_use, taxon_level, sample_mapping, repo
     for report in selected:
         path = os.path.join(input_folder, report)
         print(f"Lade {path}")
-        df_rel = parse_kraken2_report(path, taxon_level, sample_mapping)
+        df_rel = parse_kraken2_report(path, taxon_level)
         # Metadaten hinzufügen
         meta = sample_mapping[df_rel["run"].iloc[0]]
         df_rel["DATE"] = meta["DATE"]
@@ -97,7 +100,7 @@ def prepare_time_series(df, plant, min_rel_abundance=MIN_REL_ABUNDANCE, top_n=No
         return
 
     # Pivot: DATE x Taxon
-    pivot = plant_df.pivot_table(index="DATE", columns="name", values="rel", aggfunc="sum").fillna(0)
+    pivot = plant_df.pivot_table(index=["DATE", "run"], columns="name", values="rel", aggfunc="sum").fillna(0)
 
     # Optional: nur Top-N Taxa
     if top_n is not None:
@@ -107,21 +110,21 @@ def prepare_time_series(df, plant, min_rel_abundance=MIN_REL_ABUNDANCE, top_n=No
     # Alle NaNs auf 0
     pivot = pivot.fillna(0)
 
-    # Taxa nach globaler Summe filtern
-    taxa_to_keep = pivot.columns[pivot.sum(axis=0) >= min_rel_abundance]
-    taxa_to_other = pivot.columns.difference(taxa_to_keep)
+    unassigned = pivot.get("Unassigned", pd.Series(0, index=pivot.index))
+    remaining_cols = pivot.columns.drop("Unassigned", errors='ignore')
 
-    # Pivot für Plot
+    taxa_to_keep = remaining_cols[pivot[remaining_cols].max(axis=0) >= min_rel_abundance]
+    taxa_to_other = remaining_cols.difference(taxa_to_keep)
+
     pivot_plot = pivot[taxa_to_keep].copy()
     pivot_plot["Other"] = pivot[taxa_to_other].sum(axis=1)
-
-    pivot_plot = pivot_plot.div(pivot_plot.sum(axis=1), axis=0)
+    pivot_plot["Unassigned"] = unassigned
 
     #Replikate mitteln
     pivot_plot = pivot_plot.groupby(["DATE"]).mean()
 
     #sortieren nach Gesamtanteil
-    cols_no_other = [c for c in pivot_plot.columns if c != "Other"]
+    cols_no_other = [c for c in pivot_plot.columns if c != "Other" and c != "Unassigned"]
     sorted_cols = (
         pivot_plot[cols_no_other]
         .sum(axis=0)
@@ -130,6 +133,7 @@ def prepare_time_series(df, plant, min_rel_abundance=MIN_REL_ABUNDANCE, top_n=No
         .tolist()
     )
     sorted_cols.append("Other")
+    sorted_cols.append("Unassigned")
 
     return pivot_plot[sorted_cols]
 
@@ -155,6 +159,8 @@ def plot_all_plants(df):
             colors = [ORDER_COLOR_MAP.get(t, "#BBBBBB") for t in pivot_plot.columns]
         elif TAXON_LEVEL == "F":
             colors = [FAMILY_COLOR_MAP.get(t, "#BBBBBB") for t in pivot_plot.columns]
+        elif TAXON_LEVEL == "G":
+            colors = [GENUS_COLOR_MAP.get(t, "#BBBBBB") for t in pivot_plot.columns]
         else:
             colors = None
 
@@ -174,43 +180,35 @@ def plot_all_plants(df):
     axes[int(n/2)].set_ylabel("Relative Abundance")
     axes[-1].set_xlabel("Date")
 
-    ordered_taxa_O = [
-        "Crassvirales", "Timlovirales", "Chitovirales", "Imitervirales",
-        "Herpesvirales", "Tubulavirales", "Lefavirales", "Bunyavirales",
-        "Pimascovirales", "Algavirales", "Halopanivirales",
-        "Mononegavirales", "Rowavirales", "Picornavirales",
-        "Other"
-    ]
+    ordered_taxa_O = ["Crassvirales", "Timlovirales", "Chitovirales", "Imitervirales","Herpesvirales", "Tubulavirales", "Lefavirales", "Bunyavirales","Pimascovirales", "Algavirales", "Halopanivirales","Mononegavirales", "Rowavirales", "Picornavirales","Other"]
 
-    ordered_taxa_F = [
-        "Intestiviridae",
-        "Suoliviridae",
-        "Peduoviridae",
-        "Crevaviridae",
-        "Herelleviridae",
-        "Kyanoviridae",
-        "Straboviridae",
-        "Schitoviridae",
-        "Steitzviridae",
-        "Steigviridae",
-        "Autographiviridae",
-        "Demerecviridae",
-        "Mimiviridae",
-        "Poxviridae",
-        "Arenbergviridae",
-        "Other",
-    ]
+    ordered_taxa_F = ["Intestiviridae","Suoliviridae","Peduoviridae","Crevaviridae","Herelleviridae","Kyanoviridae","Straboviridae","Schitoviridae","Steitzviridae","Steigviridae","Autographiviridae","Demerecviridae","Mimiviridae","Poxviridae","Arenbergviridae","Other"]
 
+    ordered_taxa_G = [ "Carjivirus", "Burzaovirus", "Punavirus", "Kingevirus", "Skunavirus", "Afonbuvirus", "Junduvirus", "Aurodevirus", "Blohavirus", "Toutatisvirus", "Endlipuvirus", "Shenzhenivirus", "Kinglevirus", "Birpovirus", "Fohxhuevirus", "Cohcovirus", "Gihfavirus", "Dabirmavirus", "Polybotosvirus", "Kahnovirus", "Menderavirus", "Erskinevirus", "Taranisvirus", "Pandoravirus", "Hpunavirus", "Canhaevirus", "Oryzopoxvirus", "Mushuvirus", "Casadabanvirus", "Jahgtovirus" ,  "Brigitvirus", "Other", "Unassigned" ]
 
-    legend_taxa = [t for t in (ordered_taxa_O if TAXON_LEVEL == "O" else ordered_taxa_F) if t in all_taxa]
+    if TAXON_LEVEL == "O":
+        order = ordered_taxa_O
+    elif TAXON_LEVEL == "F":
+        order = ordered_taxa_F
+    elif TAXON_LEVEL == "G":
+        order = ordered_taxa_G
+
+    legend_taxa = [t for t in order if t in all_taxa]
     
     add_global_legend(axes[-1], legend_taxa)
     plt.show()
 
 
 def add_global_legend(ax, taxa):
+    if TAXON_LEVEL == "O":
+        color_map = ORDER_COLOR_MAP
+    elif TAXON_LEVEL == "F":
+        color_map = FAMILY_COLOR_MAP
+    elif TAXON_LEVEL == "G":
+        color_map = GENUS_COLOR_MAP
+
     handles = [
-        Patch(facecolor=(ORDER_COLOR_MAP if TAXON_LEVEL == "O" else FAMILY_COLOR_MAP).get(t, "#BBBBBB"), label=t)
+        Patch(facecolor=color_map.get(t, "#BBBBBB"), label=t)
         for t in taxa
     ]
 
@@ -226,6 +224,8 @@ def plot_single_plant(pivot_plot, plant):
         colors = [ORDER_COLOR_MAP.get(taxon, "#BBBBBB") for taxon in pivot_plot.columns]
     elif TAXON_LEVEL == "F":
         colors = [FAMILY_COLOR_MAP.get(taxon, "#BBBBBB") for taxon in pivot_plot.columns]
+    elif TAXON_LEVEL == "G":
+        colors = [GENUS_COLOR_MAP.get(taxon, "#BBBBBB") for taxon in pivot_plot.columns]
     else:
         colors = None
 
