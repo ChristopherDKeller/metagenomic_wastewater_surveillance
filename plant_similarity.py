@@ -108,7 +108,7 @@ def plot_similarity_heatmap(similarity_df):
     cbar = plt.colorbar(im, ax=ax)
     cbar.set_label("Bray-Curtis Similarity", rotation=90)
 
-    ax.set_title("Virale Ähnlichkeit zwischen Klärwerken")
+    ax.set_title("Viral Similarity between Treatment Plants")
 
     plt.tight_layout()
     plt.show()

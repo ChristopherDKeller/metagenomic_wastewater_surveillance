@@ -8,7 +8,7 @@ import seaborn as sns
 # KONFIGURATION
 # ==========================
 REPORT_FILE = "kraken2_run/ERR12510713_report.txt"
-TAXON_LEVEL = "F"
+TAXON_LEVEL = None
 N_ITER = 100           # Anzahl Randomization Iterationen
 PLOT_HIST = True
 # ==========================
@@ -27,7 +27,7 @@ def parse_kraken2_report(path, taxon_level):
         dtype={"name": str}
     )
     df["name"] = df["name"].str.strip()
-    df_level = df[df["rank_code"] == taxon_level].copy()
+    df_level = df[df["rank_code"] == taxon_level].copy() if TAXON_LEVEL else df.copy()
     taxon_reads = df_level.set_index("name")["reads_clade"].to_dict()
     return taxon_reads
 
@@ -93,3 +93,8 @@ if __name__ == "__main__":
 #   Mittelwert: 0.9902
 #   Median: 0.9901
 #   Min: 0.9862, Max: 0.9934
+
+# Randomized Bray-Curtis Similarities (1 Iterationen) without filtering:
+#  Mittelwert: 0.9992
+#  Median: 0.9992
+#  Min: 0.9992, Max: 0.9992
