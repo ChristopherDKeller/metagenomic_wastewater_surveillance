@@ -6,6 +6,10 @@ from scipy.spatial.distance import braycurtis
 
 from util import PLANT_NAME_MAP
 
+# This script calculaes the Bray-Curtis similarity between treatment plants on the basis of viral taxonomic profiles.
+# The taxonomic profiles are aggregated per plant from Kraken2 reports.
+# It can be configured by changing the constants below.
+
 # ============================================================
 # KONFIGURATION
 # ============================================================

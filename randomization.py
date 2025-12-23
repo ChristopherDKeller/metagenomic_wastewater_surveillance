@@ -4,6 +4,8 @@ from scipy.spatial.distance import braycurtis
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+# This script performs randomization to assess Bray-Curtis similarity.
+
 # ==========================
 # KONFIGURATION
 # ==========================

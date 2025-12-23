@@ -4,14 +4,17 @@ from scipy.spatial.distance import pdist
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+# This script compares Bray-Curtis similarities between technical replicates or the neirest temporal samples.
+# It can be configured by changing the constants below.
+
 # ============================================================
 # EINSTELLUNGEN
 # ============================================================
 INPUT_FOLDER = "kraken2_run"
 META_CSV = "samples.csv"
 
-TAXON_LEVEL = "O"
-MODE = "temporal"           # "replicate" oder "temporal"
+TAXON_LEVEL = None
+MODE = "replicate"           # "replicate" oder "temporal"
 
 MIN_TOTAL_READS = 1_000_000
 DATE_COLUMN = "COLLECTION_DATE"

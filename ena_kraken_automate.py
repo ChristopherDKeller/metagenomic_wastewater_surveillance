@@ -2,8 +2,10 @@ import os
 import subprocess
 import requests
 import sys
-import shutil
 import time
+
+# This script automates the download of FASTQ files from ENA, runs Kraken2 in a Docker container,
+# and manages the output files. It can be configured by changing the constants below.
 
 KRAKEN2_IMAGE = "staphb/kraken2:2.1.6-viral-20250402"
 OUTPUT_DIR = "kraken2_run"

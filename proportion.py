@@ -2,6 +2,9 @@ import os
 import numpy as np
 import pandas as pd
 
+# This script calculates the proportion of specific virus taxa in Kraken2 reports.
+# It can be configured by changing the constants below.
+
 INPUT_FOLDER = "kraken2_run"
 
 TAXA = {

@@ -2,6 +2,8 @@ import pandas as pd
 import subprocess
 import sys
 
+# This script automates the download of FASTQ files from ENA, runs Kraken2 in a Docker container,
+# and manages the output files for a batch of samples specified in a CSV file.
 
 def main():
     if len(sys.argv) != 2:

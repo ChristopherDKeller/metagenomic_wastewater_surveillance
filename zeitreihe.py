@@ -6,12 +6,15 @@ import matplotlib.pyplot as plt
 
 from util import FAMILY_COLOR_MAP, GENUS_COLOR_MAP, ORDER_COLOR_MAP, PLANT_NAME_MAP
 
+# This script creates stacked area plots of virus taxonomic levels over time for wastewater treatment plants.
+# It can be configured by changing the constants below. 
+
 # ============================================================
 # KONFIGURATION
 # ============================================================
 INPUT_FOLDER = "kraken2_run"
 REPORTS_TO_USE = []
-TAXON_LEVEL = "G"
+TAXON_LEVEL = "G"               # "O"=Order, "F"=Family, "G"=Genus, None=all levels
 MIN_REL_ABUNDANCE = 0.06
 META_CSV = "samples.csv"
 # ============================================================

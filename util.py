@@ -24,7 +24,8 @@ ORDER_COLOR_MAP = {
     "Rowavirales":     "#E7298A",
     "Picornavirales":  "#66A61E",
     "Tubulavirales":   "#A6CEE3",
-    "Other":           "#D9D9D9",
+    "Unassigned":      "#AAAAAA",
+    "Other":           "#DDDDDD",
 }
 
 FAMILY_COLOR_MAP = {
@@ -39,7 +40,8 @@ FAMILY_COLOR_MAP = {
     "Steitzviridae":   "#cab2d6",
     "Straboviridae":   "#6a3d9a",
     "Suoliviridae":    "#ffff99",
-    "Other":           "#D9D9D9",
+    "Unassigned":      "#AAAAAA",
+    "Other":           "#DDDDDD",
 
     "Demerecviridae":  "#8dd3c7",
     "Autographiviridae":"#ffffb3",
