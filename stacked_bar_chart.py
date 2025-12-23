@@ -2,13 +2,16 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from util import FAMILY_COLOR_MAP
+from util import FAMILY_COLOR_MAP, PLANT_NAME_MAP
+
+# This script creates stacked bar charts of viral taxonomic compositions across samples.
+# It can be configured by changing the constants below.
 
 # ============================================================
 # KONFIGURATION
 # ============================================================
 INPUT_FOLDER = "kraken2_run"
-REPORTS_TO_USE = ["ERR12510710_report.txt", "ERR12510711_report.txt", "ERR12510713_report.txt", "ERR12510714_report.txt"] # [] = alle Reports im Ordner
+REPORTS_TO_USE = ["ERR12510709_report.txt", "ERR12510710_report.txt", "ERR12510724_report.txt", "ERR12510725_report.txt"] # [] = alle Reports im Ordner
 TAXON_LEVEL = "F"
 MIN_REL_ABUNDANCE = 0.03             # Taxa <x% werden zu "Other" zusammengefasst
 META_CSV = "samples.csv"
@@ -46,8 +49,17 @@ def parse_kraken2_report(path, taxon_level, sample_mapping):
     # taxonomisches Level filtern
     df_level = df[df["rank_code"] == taxon_level].copy()
 
-    # relative Häufigkeiten
+    reads_at_level = df_level["reads_clade"].sum()
+    unassigned_reads = virus_reads_total - reads_at_level
+    
+    # Erstelle eine Zeile für die nicht zugeordneten Viren
+    unassigned_row = pd.DataFrame({ 
+        "name": ["Unassigned"], 
+        "rel": [unassigned_reads / virus_reads_total]
+    })
+
     df_level["rel"] = df_level["reads_clade"] / virus_reads_total
+    df_level = pd.concat([df_level[["name", "rel"]], unassigned_row], ignore_index=True)
 
     # Sample Label bestimmen
     basename = os.path.basename(path)
@@ -89,7 +101,7 @@ def load_reports(input_folder, reports_to_use, taxon_level, sample_mapping):
 
 def plot_stacked(df):
     """
-    Erstellt einen gestapelten Balkenplot mit einer 'Other'-Kategorie.
+    Erstellt einen gestapelten Balkenplot mit 'Other' und 'Unassigned'.
     """
 
     # Pivot: Zeilen = Samples, Spalten = Taxa, Werte = rel
@@ -100,29 +112,36 @@ def plot_stacked(df):
         fill_value=0
     )
 
-    # Taxa auswählen, die global >= MIN_REL_ABUNDANCE sind
-    taxa_to_keep = pivot.columns[pivot.sum(axis=0) >= MIN_REL_ABUNDANCE]
-    taxa_to_other = pivot.columns.difference(taxa_to_keep)
+    unassigned = pivot["Unassigned"]
+    taxa_cols = pivot.columns.drop("Unassigned", errors="ignore")
+
+    taxa_sums = pivot[taxa_cols].sum(axis=0)
+    taxa_to_keep = taxa_sums[taxa_sums >= MIN_REL_ABUNDANCE].index
+    taxa_to_other = taxa_cols.difference(taxa_to_keep)
 
     pivot_plot = pivot[taxa_to_keep].copy()
-
-    # "Other" spalte hinzufügen
     pivot_plot["Other"] = pivot[taxa_to_other].sum(axis=1)
 
-    # Jede Zeile sauber auf 1 normieren
-    pivot_plot = pivot_plot.div(pivot_plot.sum(axis=1), axis=0)
+    if isinstance(unassigned, pd.Series):
+        pivot_plot["Unassigned"] = unassigned
 
-    sorted_cols = (
-        pivot_plot
-        .drop(columns=["Other"])
+    main_cols = [c for c in pivot_plot.columns if c not in ("Other", "Unassigned")]
+
+    sorted_main = (
+        pivot_plot[main_cols]
         .sum(axis=0)
         .sort_values(ascending=False)
         .index
         .tolist()
     )
-    sorted_cols.append("Other")
 
-    pivot_plot = pivot_plot[sorted_cols]
+    final_cols = sorted_main
+    if "Other" in pivot_plot.columns:
+        final_cols.append("Other")
+    if "Unassigned" in pivot_plot.columns:
+        final_cols.append("Unassigned")
+
+    pivot_plot = pivot_plot[final_cols]
 
     pivot_plot.plot(
         color=FAMILY_COLOR_MAP,
@@ -139,17 +158,17 @@ def plot_stacked(df):
 def load_sample_metadata(csv_path):
     """
     Lädt die Metadaten-CSV und baut ein Mapping:
-    RUN_ACCESSION → 'CITY DATE (R1)'
+    RUN_ACCESSION → 'PLANT DATE (R1)'
     """
     df = pd.read_csv(csv_path, sep=";")
 
     mapping = {}
     for _, row in df.iterrows():
         run = str(row["ENA_RUN_ACCESSION"]).strip()
-        city = str(row["CITY"]).strip()
+        plant = PLANT_NAME_MAP[str(row["PLANT"]).strip()]
         date = str(row["COLLECTION_DATE"]).strip()
         replica = row["REPLICA"]
-        label = f"{city} {date} (R{replica})"
+        label = f"{plant} {date} (R{replica})"
         mapping[run] = label
 
     return mapping
